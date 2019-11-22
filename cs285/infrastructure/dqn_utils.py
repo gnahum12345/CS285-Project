@@ -57,7 +57,7 @@ def agent_model(obs, num_actions, scope, reuse=False):
             out = layers.conv2d(out, num_outputs=64, kernel_size=[4,4], stride=2, activation_fn=tf.nn.relu)
             out = layers.conv2d(out, num_outputs=64, kernel_size=[3,3], stride=1, activation_fn=tf.nn.relu)
             out = tf.layers.dense(inputs=out, units=512, activation=tf.tanh)
-            out = tf.layers.dense(inputs=out, units=256, activation=tf.tanh)
+            out = tf.layers.dense(inputs=out, units=256, activation=None)
             return out
 
 def agent_exploration_schedule(num_timesteps):

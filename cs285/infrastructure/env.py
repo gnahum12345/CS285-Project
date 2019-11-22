@@ -24,7 +24,7 @@ class Env:
         self.loss_type = args['loss_type'] # this is l1, or l2.
         self.cartesian = args['cartesian']
         self.prev_step = np.zeros((256,256)) # useless???
-        self.prev_loss = 1/float('inf')
+        self.prev_loss = float('-inf')
 
     def sample(self):
         rand = np.random.choice(self.action_space, 1)
@@ -62,13 +62,14 @@ class Env:
         print(type(obs))
         self.state_buffer.append(obs)
         self.prev_step = np.zeros((256,256))
-        self.prev_loss = 1/float('inf')
+        self.prev_loss = float('-inf')
         return ret
 
     def act(self, action):
         '''
         Pick the line of k-space and sample it and return the reward.
         '''
+
         self.action_mask[action] = np.ones(self.action_shape[-1])
         next_step = self.get_image()
         print('ACT:\nn\n\n\n\n')
@@ -87,6 +88,7 @@ class Env:
         return loss
 
     def step(self, action):
+        # import pdb; pdb.set_trace()
         loss = self.act(action)
         reward = (loss - self.prev_loss) / self.prev_loss
         self.prev_loss = loss
@@ -95,7 +97,7 @@ class Env:
         observation = self.prev_step
         obs = np.stack((observation, self.action_mask))
         obs = obs.transpose([1, 2, 0])
-        #import pdb; pdb.set_trace()
+
         self.state_buffer.append(observation)
         return obs, reward, done
 
