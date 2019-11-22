@@ -15,7 +15,7 @@ class DQNAgent(object):
         print('DQNAgent: ', self.agent_params, '\n\n')
         self.batch_size = agent_params['batch_size']
         self.last_obs = self.env.reset()
-
+        # import pdb; pdb.set_trace()
         self.num_actions = agent_params['ac_dim']
         self.learning_starts = agent_params['learning_starts']
         self.learning_freq = agent_params['learning_freq']
@@ -79,7 +79,7 @@ class DQNAgent(object):
 
             # TODO query the policy with enc_last_obs to select action
             action = self.actor.get_action(enc_last_obs)
-            action = action[0]
+
 
         print('Action:', action, ' random:', perform_random_action)
         # DONE
@@ -89,7 +89,7 @@ class DQNAgent(object):
             #obs, reward, done, info = env.step(action)
         obs, reward, done = self.env.step(action)
         self.last_obs = obs
-
+        # import pdb; pdb.set_trace()
         # DONE
         # T store the result of taking this action into the replay buffer
         # HINT1: see replay buffer's store_effect function
@@ -130,12 +130,13 @@ class DQNAgent(object):
                 self.critic.obs_tp1_ph: next_ob_no,
                 self.critic.done_mask_ph: terminal_n,
             }
+            import pdb; pdb.set_trace()
 
             # TODO: kinda done, but prob wrong.
             # T: create a LIST of tensors to run in order to
             # train the critic as well as get the resulting total_error
-            tensors_to_run = [self.critic.total_error, self.critic.train_fn]
-            loss, _ = self.sess.run(tensors_to_run, feed_dict=feed_dict)
+            self.sess.run(self.critic.train_fn,feed_dict=feed_dict)
+            loss = self.sess.run(self.critic.total_error, feed_dict=feed_dict)
             print('loss: ', loss)
             # Note: remember that the critic's total_error value is what you
             # created to compute the Bellman error in a batch,

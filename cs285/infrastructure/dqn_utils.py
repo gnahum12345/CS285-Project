@@ -17,7 +17,7 @@ def get_env_kwargs(env_name):
         ),
         'q_func': agent_model,
         'replay_buffer_size': 10000,
-        'batch_size': 32,
+        'batch_size': 1,
         'gamma': 1.00,
         'learning_starts': 25,
         'learning_freq': 1,
@@ -56,9 +56,9 @@ def agent_model(obs, num_actions, scope, reuse=False):
             out = layers.conv2d(out, num_outputs=32, kernel_size=[8,8], stride=4, activation_fn=tf.nn.relu)
             out = layers.conv2d(out, num_outputs=64, kernel_size=[4,4], stride=2, activation_fn=tf.nn.relu)
             out = layers.conv2d(out, num_outputs=64, kernel_size=[3,3], stride=1, activation_fn=tf.nn.relu)
-            out = layers.fully_connected(out, num_outputs=512, activation_fn=tf.tanh)
-            out = layers.fully_connected(out, num_outputs=256)
-        return out
+            out = tf.layers.dense(inputs=out, units=512, activation=tf.tanh)
+            out = tf.layers.dense(inputs=out, units=256, activation=tf.tanh)
+            return out
 
 def agent_exploration_schedule(num_timesteps):
     return PiecewiseSchedule(
@@ -364,7 +364,11 @@ class MemoryOptimizedReplayBuffer(object):
         else:
             # this optimization has potential to saves about 30% compute time \o/
             img_h, img_w = self.obs.shape[1], self.obs.shape[2]
+            #print(self.obs.shape)
+            #import pdb; pdb.set_trace()
+            #obs = np.expand_dims(self.obs, 3)
             return self.obs[start_idx:end_idx].transpose(1, 2, 0, 3).reshape(img_h, img_w, -1)
+            #return self.obs[start_idx:end_idx].transpose(1, 2, 0, 3).reshape(img_h, img_w, -1)
 
     def store_frame(self, frame):
         """Store a single frame in the buffer at the next available index, overwriting
@@ -381,6 +385,8 @@ class MemoryOptimizedReplayBuffer(object):
         idx: int
             Index at which the frame is stored. To be used for `store_effect` later.
         """
+        # import pdb; pdb.set_trace()
+
         if self.obs is None:
             self.obs      = np.empty([self.size] + list(frame.shape), dtype=np.float32)
             self.action   = np.empty([self.size],                     dtype=np.int32)
@@ -411,6 +417,6 @@ class MemoryOptimizedReplayBuffer(object):
         done: bool
             True if episode was finished after performing that action.
         """
-        self.action[idx] = action
+        self.action[idx] = action[0]
         self.reward[idx] = reward
         self.done[idx]   = done

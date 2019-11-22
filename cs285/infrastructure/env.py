@@ -10,7 +10,7 @@ class Env:
         self.action_shape = args['mask_shape']
         print('ActionShap: \n\n ', self.action_shape)
         self.action_mask = np.zeros(self.action_shape) # 256 lines of k-space. For radial its 360 degrees of freedom. This is the mask.
-        self.observation_shape = (2,256,256)
+        self.observation_shape = (256,256,2)
         self.action_space = list(range(256))
         self.ksp = args['ksp'][:,:,32:288]
         self.coord = args['coord']
@@ -32,6 +32,7 @@ class Env:
         return rand
 
     def get_image(self):
+        # import pdb; pdb.set_trace()
         visibile_data = self.ksp * self.action_mask
         assert self.ksp.shape == visibile_data.shape, 'Data should be the same shape'
         # total variation
@@ -41,7 +42,7 @@ class Env:
             return mr.app.TotalVariationRecon(visibile_data, mps, lamda, coord=self.coord).run() # requires coordinates
 
         if self.cartesian:
-            return sp.rss(sp.ifft(visibile_data),axes=0)
+            return sp.rss(sp.ifft(visibile_data),axes=0) # (256,256)
 
         dcf = (self.coord[...,0]**2 + self.coord[...,1]**2)**0.5
         img_grid = sp.nufft_adjoint(visibile_data * dcf, coord)
@@ -55,12 +56,14 @@ class Env:
     def reset(self):
         obs = self.get_image()
         self.action_mask = np.zeros(self.action_shape)
+        ret = np.stack((obs, self.action_mask)).transpose([1,2,0])
+
         self._reset_buffer()
         print(type(obs))
         self.state_buffer.append(obs)
         self.prev_step = np.zeros((256,256))
         self.prev_loss = 1/float('inf')
-        return obs
+        return ret
 
     def act(self, action):
         '''
@@ -90,9 +93,11 @@ class Env:
         done = reward < 0.005
 
         observation = self.prev_step
+        obs = np.stack((observation, self.action_mask))
+        obs = obs.transpose([1, 2, 0])
+        #import pdb; pdb.set_trace()
         self.state_buffer.append(observation)
-        # TODO: something during training.
-        return loss, reward, done
+        return obs, reward, done
 
     def eval(self):
         self.training = False

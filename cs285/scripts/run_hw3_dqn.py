@@ -21,7 +21,6 @@ class Q_Trainer(object):
         env_args = get_env_kwargs(params['env_name'])
 
         self.agent_params = {**train_args, **env_args, **params}
-
         self.params['agent_class'] = DQNAgent
         self.params['agent_params'] = self.agent_params
         self.params['train_batch_size'] = params['batch_size']
@@ -49,7 +48,7 @@ def main():
 
     parser.add_argument('--eval_batch_size', type=int, default=1000)
 
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--num_agent_train_steps_per_iter', type=int, default=1)
     parser.add_argument('--num_critic_updates_per_agent_update', type=int, default=1)
     parser.add_argument('--double_q', action='store_true')

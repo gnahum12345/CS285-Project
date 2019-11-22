@@ -62,7 +62,7 @@ class RL_Trainer(object):
         discrete = True
         # Observation and action sizes
         ob_dim = self.env.observation_shape
-        ac_dim = self.env.action_shape
+        ac_dim = (1,)
 
         self.params['agent_params']['discrete'] = discrete
         self.params['agent_params']['ac_dim'] = ac_dim
