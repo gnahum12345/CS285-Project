@@ -24,7 +24,6 @@ class Q_Trainer(object):
         self.params['agent_class'] = DQNAgent
         self.params['agent_params'] = self.agent_params
         self.params['train_batch_size'] = params['batch_size']
-
         self.rl_trainer = RL_Trainer(self.params)
 
     def run_training_loop(self):

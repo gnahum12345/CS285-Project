@@ -76,6 +76,7 @@ class DQNAgent(object):
             # previous frames.
             enc_last_obs = self.replay_buffer.encode_recent_observation()
             enc_last_obs = enc_last_obs[None, :]
+            # import pdb; pdb.set_trace()
 
             # TODO query the policy with enc_last_obs to select action
             action = self.actor.get_action(enc_last_obs)
@@ -103,6 +104,7 @@ class DQNAgent(object):
 
     def sample(self, batch_size):
         if self.replay_buffer.can_sample(self.batch_size):
+            # import pdb; pdb.set_trace()
             return self.replay_buffer.sample(batch_size)
         else:
             return [],[],[],[],[]
@@ -130,7 +132,7 @@ class DQNAgent(object):
                 self.critic.obs_tp1_ph: next_ob_no,
                 self.critic.done_mask_ph: terminal_n,
             }
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
 
             # TODO: kinda done, but prob wrong.
             # T: create a LIST of tensors to run in order to

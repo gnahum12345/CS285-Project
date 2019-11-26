@@ -34,7 +34,7 @@ def get_env_kwargs(env_name):
 def get_env_params():
     data_path = '/mikRAID/frank/data/cube_knees/'
     ksp_data_path = data_path + 'train_ksp_slices/13_92.npy'
-    # data_path = path + os.listdir(path)
+    # data_path = data_path + os.listdir(data_path)
     ksp = np.load(ksp_data_path)
     args = {}
     args['ksp'] = ksp
@@ -52,12 +52,14 @@ def get_env_params():
 def agent_model(obs, num_actions, scope, reuse=False):
     with tf.variable_scope(scope, reuse=reuse):
         out = obs
+        # import pdb; pdb.set_trace()
         with tf.variable_scope("action_value"):
             out = layers.conv2d(out, num_outputs=32, kernel_size=[8,8], stride=4, activation_fn=tf.nn.relu)
             out = layers.conv2d(out, num_outputs=64, kernel_size=[4,4], stride=2, activation_fn=tf.nn.relu)
             out = layers.conv2d(out, num_outputs=64, kernel_size=[3,3], stride=1, activation_fn=tf.nn.relu)
             out = tf.layers.dense(inputs=out, units=512, activation=tf.tanh)
-            out = tf.layers.dense(inputs=out, units=256, activation=None)
+            out = tf.reshape(out, [tf.shape(out)[0], 32, 32*512])
+            out = tf.layers.dense(inputs=out, units=256, activation=tf.tanh)
             return out
 
 def agent_exploration_schedule(num_timesteps):

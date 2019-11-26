@@ -30,7 +30,7 @@ class DQNCritic(BaseCritic):
         #####################
 
         # q values, created with the placeholder that holds CURRENT obs (i.e., t)
-        import pdb; pdb.set_trace()
+        # import pdb; pdb.set_trace()
         self.q_t_values = q_func(self.obs_t_ph, self.ac_dim, scope='q_func', reuse=False)
         self.q_t = tf.reduce_sum(self.q_t_values * tf.one_hot(self.act_t_ph, 1), axis=1)
 
