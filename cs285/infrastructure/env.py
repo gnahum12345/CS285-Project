@@ -12,7 +12,10 @@ class Env:
         self.action_mask = np.zeros(self.action_shape) # 256 lines of k-space. For radial its 360 degrees of freedom. This is the mask.
         self.observation_shape = (256,256,2)
         self.action_space = list(range(256))
-        self.ksp = args['ksp'][:,:,32:288]
+        # self.ksp = args['ksp'][:,:,32:288]
+        self.data_path = args['ksp_data_path']
+        self.index = 0
+        self.get_ksp()
         self.coord = args['coord']
         self.state_buffer = deque([], maxlen=args['history_length'])
         self.training = True
@@ -30,6 +33,19 @@ class Env:
         rand = np.random.choice(self.action_space, 1)
         self.action_space.remove(rand)
         return rand
+
+    def get_ksp(self):
+        import os
+        files = os.listdir(self.data_path)
+        self.f = files[self.index]
+        self.index += 1
+
+        while '.npy' not in self.f and self.index < len(files):
+            self.f = files[self.index]
+            self.index += 1
+
+        ksp_data_path = os.path.join(self.data_path, self.f)
+        self.ksp = np.load(ksp_data_path)[:,:,32:288] #cropped to 256,256
 
     def get_image(self):
         # import pdb; pdb.set_trace()
@@ -56,8 +72,9 @@ class Env:
     def reset(self):
         obs = self.get_image()
         self.action_mask = np.zeros(self.action_shape)
+        self.get_ksp()
         ret = np.stack((obs, self.action_mask)).transpose([1,2,0])
-
+        # import pdb; pdb.set_trace()
         self._reset_buffer()
         print(type(obs))
         self.state_buffer.append(obs)
@@ -70,10 +87,9 @@ class Env:
         Pick the line of k-space and sample it and return the reward.
         '''
 
-        self.action_mask[action] = np.ones(self.action_shape[-1])
+        self.action_mask[action, :] = np.ones(self.action_shape[-1])
         next_step = self.get_image()
-        print('ACT:\nn\n\n\n\n')
-        print(self.action_shape, next_step.shape, self.prev_step)
+        # print(self.action_shape, next_step.shape, self.prev_step)
 
         if self.loss_type == 1:
             # FIX: this might be broken...
@@ -84,15 +100,18 @@ class Env:
         elif self.loss_type == 3:
             raise Exception("This hasn't been implemented yet. \nPlease use l1/l2 losses")
 
+        print('Act: index: {}, nonZero: {}\n\n\n\n\n loss: {}, prev_loss: {}'.format(self.index, np.count_nonzero(self.action_mask), loss, self.prev_loss))
+
         self.prev_step = next_step # update prev_step.
+
         return loss
 
     def step(self, action):
-        # import pdb; pdb.set_trace()
         loss = self.act(action)
-        reward = (loss - self.prev_loss) / self.prev_loss
+        # import pdb; pdb.set_trace()
+        reward = np.abs(loss - self.prev_loss)
         self.prev_loss = loss
-        done = reward < 0.005
+        done = reward < 5e-3
 
         observation = self.prev_step
         obs = np.stack((observation, self.action_mask))

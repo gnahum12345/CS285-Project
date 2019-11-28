@@ -32,12 +32,12 @@ def get_env_kwargs(env_name):
 
 
 def get_env_params():
-    data_path = '/mikRAID/frank/data/cube_knees/'
-    ksp_data_path = data_path + 'train_ksp_slices/13_92.npy'
+    data_path = '/mikRAID/frank/data/cube_knees/train_ksp_slices/'
+    ksp_data_path = data_path + '13_92.npy'
     # data_path = data_path + os.listdir(data_path)
     ksp = np.load(ksp_data_path)
     args = {}
-    args['ksp'] = ksp
+    args['ksp_data_path'] = data_path
     args['mask_shape'] = (256,256)
     args['coord'] = None
     args['history_length'] = 10

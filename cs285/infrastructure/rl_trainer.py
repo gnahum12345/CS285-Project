@@ -214,12 +214,10 @@ class RL_Trainer(object):
             # HINT1: use the agent's sample function
             # HINT2: how much data = self.params['train_batch_size']
             ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch = self.agent.sample(self.params['train_batch_size'])
-
             # DONE
             # T use the sampled data for training
             # HINT: use the agent's train function
             # HINT: print or plot the loss for debugging!
-            # for _ in range(10):
             loss = self.agent.train(ob_batch, ac_batch, re_batch, next_ob_batch, terminal_batch)
 
         return loss

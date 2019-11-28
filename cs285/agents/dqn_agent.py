@@ -77,9 +77,10 @@ class DQNAgent(object):
             enc_last_obs = self.replay_buffer.encode_recent_observation()
             enc_last_obs = enc_last_obs[None, :]
             # import pdb; pdb.set_trace()
+            action = self.actor.get_action(enc_last_obs)
+
 
             # TODO query the policy with enc_last_obs to select action
-            action = self.actor.get_action(enc_last_obs)
 
 
         print('Action:', action, ' random:', perform_random_action)
@@ -100,6 +101,7 @@ class DQNAgent(object):
 
         # DONE: T if taking this step resulted in done, reset the env (and the latest observation)
         if done:
+            np.save('./env_{}_{}'.format(self.env.index, self.env.f), self.env.prev_step)
             self.last_obs = self.env.reset()
 
     def sample(self, batch_size):
@@ -139,6 +141,7 @@ class DQNAgent(object):
             # train the critic as well as get the resulting total_error
             self.sess.run(self.critic.train_fn,feed_dict=feed_dict)
             loss = self.sess.run(self.critic.total_error, feed_dict=feed_dict)
+
             print('loss: ', loss)
             # Note: remember that the critic's total_error value is what you
             # created to compute the Bellman error in a batch,
