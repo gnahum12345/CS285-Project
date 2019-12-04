@@ -75,8 +75,9 @@ class DQNAgent(object):
             # input that should be given to a Q network by appending some
             # previous frames.
             enc_last_obs = self.replay_buffer.encode_recent_observation()
+            import pdb; pdb.set_trace()
             enc_last_obs = enc_last_obs[None, :]
-            # import pdb; pdb.set_trace()
+            self.last_enc_obs = enc_last_obs
             action = self.actor.get_action(enc_last_obs)
 
 

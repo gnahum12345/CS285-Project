@@ -8,24 +8,37 @@ class Env:
     def __init__(self, args):
         print(args)
         self.action_shape = args['mask_shape']
-        print('ActionShap: \n\n ', self.action_shape)
-        self.action_mask = np.zeros(self.action_shape) # 256 lines of k-space. For radial its 360 degrees of freedom. This is the mask.
-        self.observation_shape = (256,256,2)
-        self.action_space = list(range(256))
+
         # self.ksp = args['ksp'][:,:,32:288]
         self.data_path = args['ksp_data_path']
         self.index = 0
         self.get_ksp()
         self.coord = args['coord']
+
+        ### Set up for which environment we should use
+        self.total_var = args['total_var'] # use total variation or not.
+        self.loss_type = args['loss_type'] # this is 1 for l1, or 2 for l2.
+        self.cartesian = args['cartesian'] # true or false.
+
+        #### Fully sampled image for calculating error metric ####
+
+
+        self.action_mask = np.ones(self.action_shape)
+        self.fully_sampled = self.get_image()
+
+        ##### Setting up normal runs #####
+
+        self.action_mask = np.zeros(self.action_shape) # 256 lines of k-space. For radial its 360 degrees of freedom. This is the mask.
+        self.observation_shape = (256,256,2)
+        self.action_space = list(range(256))
+
+
         self.state_buffer = deque([], maxlen=args['history_length'])
         self.training = True
 
         self.window = args['history_length']
 
-        self.baseline = args['baseline']
-        self.total_var = args['total_var']
-        self.loss_type = args['loss_type'] # this is l1, or l2.
-        self.cartesian = args['cartesian']
+
         self.prev_step = np.zeros((256,256)) # useless???
         self.prev_loss = float('-inf')
 
@@ -93,10 +106,10 @@ class Env:
 
         if self.loss_type == 1:
             # FIX: this might be broken...
-            loss = np.sum(np.abs(next_step - self.prev_step))
+            loss = np.sum(np.abs(next_step - self.fully_sampled))
         elif self.loss_type == 2:
             # FIX: this might also be broken.
-            loss = np.sum(np.square(next_step - self.prev_step))
+            loss = np.sum(np.square(next_step - self.fully_sampled))
         elif self.loss_type == 3:
             raise Exception("This hasn't been implemented yet. \nPlease use l1/l2 losses")
 
@@ -111,7 +124,7 @@ class Env:
         # import pdb; pdb.set_trace()
         reward = np.abs(loss - self.prev_loss)
         self.prev_loss = loss
-        done = reward < 5e-3
+        done = reward < 5e-3 #0.5%
 
         observation = self.prev_step
         obs = np.stack((observation, self.action_mask))

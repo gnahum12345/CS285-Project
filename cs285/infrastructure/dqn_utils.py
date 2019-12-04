@@ -19,12 +19,12 @@ def get_env_kwargs(env_name):
         'replay_buffer_size': 10000,
         'batch_size': 1,
         'gamma': 1.00,
-        'learning_starts': 25,
+        'learning_starts': 100,
         'learning_freq': 1,
         'frame_history_len': 1,
         'target_update_freq': 30,
         'grad_norm_clipping': 10,
-        'num_timesteps': 256,
+        'num_timesteps': 300,
         'env_params': get_env_params(),
     }
     kwargs['exploration_schedule'] = agent_exploration_schedule(kwargs['num_timesteps'])
@@ -367,7 +367,7 @@ class MemoryOptimizedReplayBuffer(object):
             # this optimization has potential to saves about 30% compute time \o/
             img_h, img_w = self.obs.shape[1], self.obs.shape[2]
             #print(self.obs.shape)
-            #import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             #obs = np.expand_dims(self.obs, 3)
             return self.obs[start_idx:end_idx].transpose(1, 2, 0, 3).reshape(img_h, img_w, -1)
             #return self.obs[start_idx:end_idx].transpose(1, 2, 0, 3).reshape(img_h, img_w, -1)
