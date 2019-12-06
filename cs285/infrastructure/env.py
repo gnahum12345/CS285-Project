@@ -113,7 +113,7 @@ class Env:
         elif self.loss_type == 3:
             raise Exception("This hasn't been implemented yet. \nPlease use l1/l2 losses")
 
-        print('Act: index: {}, nonZero: {}\n\n\n\n\n loss: {}, prev_loss: {}'.format(self.index, np.count_nonzero(self.action_mask), loss, self.prev_loss))
+        # print('Act: index: {}, nonZero: {}\n\n\n\n\n loss: {}, prev_loss: {}'.format(self.index, np.count_nonzero(self.action_mask), loss, self.prev_loss))
 
         self.prev_step = next_step # update prev_step.
 

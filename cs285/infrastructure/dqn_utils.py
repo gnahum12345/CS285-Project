@@ -12,7 +12,7 @@ def get_env_kwargs(env_name):
     kwargs = {
         'optimizer_spec': OptimizerSpec(
             constructor=tf.train.AdamOptimizer,
-            lr_schedule=ConstantSchedule(1e-3),
+            lr_schedule=ConstantSchedule(1),
             kwargs={}
         ),
         'q_func': agent_model,
@@ -57,8 +57,8 @@ def agent_model(obs, num_actions, scope, reuse=False):
             out = layers.conv2d(out, num_outputs=64, kernel_size=[4,4], stride=2, activation_fn=tf.nn.relu)
             out = layers.conv2d(out, num_outputs=64, kernel_size=[3,3], stride=1, activation_fn=tf.nn.relu)
             out = tf.reshape(out, [tf.shape(out)[0], 32*32*64])
-            out = tf.layers.dense(inputs=out, units=512, activation=tf.tanh)
-            out = tf.layers.dense(inputs=out, units=256, activation=tf.tanh)
+            out = tf.layers.dense(inputs=out, units=512, activation=tf.nn.relu)
+            out = tf.layers.dense(inputs=out, units=256)
             return out
 
 def agent_exploration_schedule(num_timesteps):
@@ -202,6 +202,7 @@ def minimize_and_clip(optimizer, objective, var_list, clip_val=10):
     `var_list` while ensure the norm of the gradients for each
     variable is clipped to `clip_val`
     """
+    import pdb; pdb.set_trace()
     gradients = optimizer.compute_gradients(objective, var_list=var_list)
     for i, (grad, var) in enumerate(gradients):
         if grad is not None:
@@ -286,7 +287,7 @@ class MemoryOptimizedReplayBuffer(object):
         act_batch      = self.action[idxes]
         rew_batch      = self.reward[idxes]
         next_obs_batch = np.concatenate([self._encode_observation(idx + 1)[None] for idx in idxes], 0)
-        done_mask      = np.array([1.0 if self.done[idx] else 0.0 for idx in idxes], dtype=np.float32)
+        done_mask      = np.array([1.0 if self.done[idx] else 0.0 for idx in idxes], dtype=np.float64)
 
         return obs_batch, act_batch, rew_batch, next_obs_batch, done_mask
 
@@ -387,7 +388,7 @@ class MemoryOptimizedReplayBuffer(object):
             Index at which the frame is stored. To be used for `store_effect` later.
         """
         # import pdb; pdb.set_trace()
-
+        # Changed from float32 to float64.
         if self.obs is None:
             self.obs      = np.empty([self.size] + list(frame.shape), dtype=np.float32)
             self.action   = np.empty([self.size],                     dtype=np.int32)

@@ -80,7 +80,9 @@ class DQNCritic(BaseCritic):
         target_q_func_vars = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='target_q_func')
 
         #####################
-
+        self.weight_norm = tf.reduce_sum([tf.reduce_sum(var**2) for var in q_func_vars])
+        gradients = tf.gradients(self.total_error, q_func_vars)
+        self.grad_norm = tf.reduce_sum([tf.reduce_sum(grad**2) for grad in gradients])
         # train_fn will be called in order to train the critic (by minimizing the TD error)
         self.learning_rate = tf.placeholder(tf.float32, (), name="learning_rate")
         optimizer = self.optimizer_spec.constructor(learning_rate=self.learning_rate, **self.optimizer_spec.kwargs)

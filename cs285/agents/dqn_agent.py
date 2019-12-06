@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
+from cs285.infrastructure.replay_buffer import ReplayBuffer
 from cs285.infrastructure.dqn_utils import MemoryOptimizedReplayBuffer, PiecewiseSchedule
 from cs285.policies.argmax_policy import ArgMaxPolicy
 from cs285.critics.dqn_critic import DQNCritic
@@ -29,13 +30,12 @@ class DQNAgent(object):
         self.actor = ArgMaxPolicy(sess, self.critic)
 
         lander = agent_params['env_name'] == 'MRI-v3'
-        self.replay_buffer = MemoryOptimizedReplayBuffer(
-            agent_params['replay_buffer_size'], agent_params['frame_history_len'])
+        self.replay_buffer = MemoryOptimizedReplayBuffer(agent_params['replay_buffer_size'],agent_params['frame_history_len'])
         self.t = 0
         self.num_param_updates = 0
 
-    def add_to_replay_buffer(self, paths):
-        pass
+    def add_to_replay_buffer(self, path, paths=[]):
+        paths.append(path)
 
     def step_env(self):
 
@@ -75,7 +75,8 @@ class DQNAgent(object):
             # input that should be given to a Q network by appending some
             # previous frames.
             enc_last_obs = self.replay_buffer.encode_recent_observation()
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
+            np.save('enc_last_obs_{}.npy'.format(self.t), enc_last_obs.transpose())
             enc_last_obs = enc_last_obs[None, :]
             self.last_enc_obs = enc_last_obs
             action = self.actor.get_action(enc_last_obs)
@@ -84,7 +85,7 @@ class DQNAgent(object):
             # TODO query the policy with enc_last_obs to select action
 
 
-        print('Action:', action, ' random:', perform_random_action)
+        # print('Action:', action, ' random:', perform_random_action)
         # DONE
         # T take a step in the environment using the action from the policy
         # HINT1: remember that self.last_obs must always point to the newest/latest observation
@@ -103,6 +104,7 @@ class DQNAgent(object):
         # DONE: T if taking this step resulted in done, reset the env (and the latest observation)
         if done:
             np.save('./env_{}_{}'.format(self.env.index, self.env.f), self.env.prev_step)
+            np.save('./mask_{}_{}'.format(self.env.index, self.env.f), self.env.action_mask)
             self.last_obs = self.env.reset()
 
     def sample(self, batch_size):
@@ -123,7 +125,7 @@ class DQNAgent(object):
         if (self.t > self.learning_starts and \
                 self.t % self.learning_freq == 0 and \
                 self.replay_buffer.can_sample(self.batch_size)):
-
+            # import pdb; pdb.set_trace()
             # DONE
             # T populate all placeholders necessary for calculating the critic's total_error
             # HINT: obs_t_ph, act_t_ph, rew_t_ph, obs_tp1_ph, done_mask_ph
@@ -133,15 +135,15 @@ class DQNAgent(object):
                 self.critic.act_t_ph: ac_na,
                 self.critic.rew_t_ph: re_n,
                 self.critic.obs_tp1_ph: next_ob_no,
-                self.critic.done_mask_ph: terminal_n,
+                self.critic.done_mask_ph: terminal_n.astype('float32'),
             }
-            # import pdb; pdb.set_trace()
 
             # TODO: kinda done, but prob wrong.
             # T: create a LIST of tensors to run in order to
             # train the critic as well as get the resulting total_error
             self.sess.run(self.critic.train_fn,feed_dict=feed_dict)
             loss = self.sess.run(self.critic.total_error, feed_dict=feed_dict)
+            import pdb; pdb.set_trace()
 
             print('loss: ', loss)
             # Note: remember that the critic's total_error value is what you
