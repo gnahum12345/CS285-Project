@@ -52,13 +52,12 @@ def get_env_params():
 def agent_model(obs, num_actions, scope, reuse=False):
     with tf.variable_scope(scope, reuse=reuse):
         out = obs
-        # import pdb; pdb.set_trace()
         with tf.variable_scope("action_value"):
             out = layers.conv2d(out, num_outputs=32, kernel_size=[8,8], stride=4, activation_fn=tf.nn.relu)
             out = layers.conv2d(out, num_outputs=64, kernel_size=[4,4], stride=2, activation_fn=tf.nn.relu)
             out = layers.conv2d(out, num_outputs=64, kernel_size=[3,3], stride=1, activation_fn=tf.nn.relu)
+            out = tf.reshape(out, [tf.shape(out)[0], 32*32*64])
             out = tf.layers.dense(inputs=out, units=512, activation=tf.tanh)
-            out = tf.reshape(out, [tf.shape(out)[0], 32, 32*512])
             out = tf.layers.dense(inputs=out, units=256, activation=tf.tanh)
             return out
 
@@ -369,7 +368,7 @@ class MemoryOptimizedReplayBuffer(object):
             #print(self.obs.shape)
             # import pdb; pdb.set_trace()
             #obs = np.expand_dims(self.obs, 3)
-            return self.obs[start_idx:end_idx].transpose(1, 2, 0, 3).reshape(img_h, img_w, -1)
+            return self.obs[start_idx:end_idx].transpose(1, 2, 0, 3).reshape(img_w, img_h, -1)
             #return self.obs[start_idx:end_idx].transpose(1, 2, 0, 3).reshape(img_h, img_w, -1)
 
     def store_frame(self, frame):

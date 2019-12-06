@@ -122,9 +122,9 @@ class Env:
     def step(self, action):
         loss = self.act(action)
         # import pdb; pdb.set_trace()
-        reward = np.abs(loss - self.prev_loss)
+        reward = loss - self.prev_loss
         self.prev_loss = loss
-        done = reward < 5e-3 #0.5%
+        done = np.abs(reward) < 5e-3 #0.5%
 
         observation = self.prev_step
         obs = np.stack((observation, self.action_mask))
