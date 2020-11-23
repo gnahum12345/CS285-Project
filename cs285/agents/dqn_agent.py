@@ -32,6 +32,7 @@ class DQNAgent(object):
         lander = agent_params['env_name'] == 'MRI-v3'
         self.replay_buffer = MemoryOptimizedReplayBuffer(agent_params['replay_buffer_size'],agent_params['frame_history_len'])
         self.t = 0
+        self.last_t = 0
         self.num_param_updates = 0
 
     def add_to_replay_buffer(self, path, paths=[]):
@@ -76,7 +77,7 @@ class DQNAgent(object):
             # previous frames.
             enc_last_obs = self.replay_buffer.encode_recent_observation()
             #import pdb; pdb.set_trace()
-            np.save('enc_last_obs_{}.npy'.format(self.t), enc_last_obs.transpose())
+            np.save('./data/enc_last_ob/enc_last_obs_{}.npy'.format(self.t), enc_last_obs.transpose())
             enc_last_obs = enc_last_obs[None, :]
             self.last_enc_obs = enc_last_obs
             action = self.actor.get_action(enc_last_obs)
@@ -103,9 +104,11 @@ class DQNAgent(object):
 
         # DONE: T if taking this step resulted in done, reset the env (and the latest observation)
         if done:
-            np.save('./env_{}_{}'.format(self.env.index, self.env.f), self.env.prev_step)
-            np.save('./mask_{}_{}'.format(self.env.index, self.env.f), self.env.action_mask)
+            # import pdb; pdb.set_trace()
+            np.save('./data/done/diff_{}_{}.npy'.format(self.t - self.last_t, self.t), obs.transpose(2,1,0))
             self.last_obs = self.env.reset()
+            self.last_t = self.t
+
 
     def sample(self, batch_size):
         if self.replay_buffer.can_sample(self.batch_size):
@@ -141,9 +144,12 @@ class DQNAgent(object):
             # TODO: kinda done, but prob wrong.
             # T: create a LIST of tensors to run in order to
             # train the critic as well as get the resulting total_error
-            self.sess.run(self.critic.train_fn,feed_dict=feed_dict)
+            for _ in range(18):
+                self.sess.run(self.critic.train_fn,feed_dict=feed_dict)
+
             loss = self.sess.run(self.critic.total_error, feed_dict=feed_dict)
-            import pdb; pdb.set_trace()
+            # if loss == 0:
+            #     import pdb; pdb.set_trace()
 
             print('loss: ', loss)
             # Note: remember that the critic's total_error value is what you

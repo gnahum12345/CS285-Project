@@ -12,19 +12,19 @@ def get_env_kwargs(env_name):
     kwargs = {
         'optimizer_spec': OptimizerSpec(
             constructor=tf.train.AdamOptimizer,
-            lr_schedule=ConstantSchedule(1),
+            lr_schedule=ConstantSchedule(1e-3),
             kwargs={}
         ),
         'q_func': agent_model,
         'replay_buffer_size': 10000,
         'batch_size': 1,
         'gamma': 1.00,
-        'learning_starts': 100,
+        'learning_starts': 256,
         'learning_freq': 1,
         'frame_history_len': 1,
-        'target_update_freq': 30,
+        'target_update_freq': 20,
         'grad_norm_clipping': 10,
-        'num_timesteps': 300,
+        'num_timesteps': 257,
         'env_params': get_env_params(),
     }
     kwargs['exploration_schedule'] = agent_exploration_schedule(kwargs['num_timesteps'])
@@ -44,7 +44,7 @@ def get_env_params():
     args['total_var'] = False
     args['baseline'] = True
     args['gans'] = False
-    args['loss_type'] = 1
+    args['loss_type'] = 2
     args['cartesian'] = True
     return args
 
@@ -52,14 +52,14 @@ def get_env_params():
 def agent_model(obs, num_actions, scope, reuse=False):
     with tf.variable_scope(scope, reuse=reuse):
         out = obs
-        with tf.variable_scope("action_value"):
-            out = layers.conv2d(out, num_outputs=32, kernel_size=[8,8], stride=4, activation_fn=tf.nn.relu)
-            out = layers.conv2d(out, num_outputs=64, kernel_size=[4,4], stride=2, activation_fn=tf.nn.relu)
-            out = layers.conv2d(out, num_outputs=64, kernel_size=[3,3], stride=1, activation_fn=tf.nn.relu)
-            out = tf.reshape(out, [tf.shape(out)[0], 32*32*64])
-            out = tf.layers.dense(inputs=out, units=512, activation=tf.nn.relu)
-            out = tf.layers.dense(inputs=out, units=256)
-            return out
+        # with tf.variable_scope("action_value"):
+        out = layers.conv2d(out, num_outputs=32, kernel_size=[8,8], stride=4, activation_fn=tf.nn.relu)
+        out = layers.conv2d(out, num_outputs=64, kernel_size=[4,4], stride=2, activation_fn=tf.nn.relu)
+        out = layers.conv2d(out, num_outputs=64, kernel_size=[3,3], stride=1, activation_fn=tf.nn.relu)
+        out = tf.reshape(out, [tf.shape(out)[0], 32*32*64])
+        out = tf.layers.dense(inputs=out, units=512, activation=tf.nn.relu)
+        out = tf.layers.dense(inputs=out, units=256)
+        return out
 
 def agent_exploration_schedule(num_timesteps):
     return PiecewiseSchedule(
@@ -202,7 +202,7 @@ def minimize_and_clip(optimizer, objective, var_list, clip_val=10):
     `var_list` while ensure the norm of the gradients for each
     variable is clipped to `clip_val`
     """
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
     gradients = optimizer.compute_gradients(objective, var_list=var_list)
     for i, (grad, var) in enumerate(gradients):
         if grad is not None:
